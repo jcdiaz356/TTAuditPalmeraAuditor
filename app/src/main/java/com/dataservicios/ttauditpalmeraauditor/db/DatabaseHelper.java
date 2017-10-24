@@ -12,6 +12,7 @@ import com.dataservicios.ttauditpalmeraauditor.model.AuditRoadStore;
 import com.dataservicios.ttauditpalmeraauditor.model.Company;
 import com.dataservicios.ttauditpalmeraauditor.model.Departament;
 import com.dataservicios.ttauditpalmeraauditor.model.District;
+import com.dataservicios.ttauditpalmeraauditor.model.ImageTemp;
 import com.dataservicios.ttauditpalmeraauditor.model.Media;
 import com.dataservicios.ttauditpalmeraauditor.model.Poll;
 import com.dataservicios.ttauditpalmeraauditor.model.PollOption;
@@ -37,7 +38,7 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
 	// name of the database file for your application -- change to something appropriate for your app
 	private static final String DATABASE_NAME = "db_palmera_auditor";
 	// any time you make changes to your database objects, you may have to increase the database version
-	private static final int DATABASE_VERSION = 3;
+	private static final int DATABASE_VERSION = 9;
     private Context myContext;
 	// the DAO object we use to access the SimpleData table
     //pressure
@@ -54,6 +55,7 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
 	private Dao<Media, Integer>                 MediaDao            = null;
 	private Dao<RouteStoreTime, Integer>        RouteStoreTimeDao   = null;
 	private Dao<AssistControl, Integer>         AssistControlDao    = null;
+	private Dao<ImageTemp, Integer>             ImageTempDao        = null;
 
 
 	public DatabaseHelper(Context context) {
@@ -78,6 +80,7 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
 			TableUtils.createTable(connectionSource, Media.class                );
 			TableUtils.createTable(connectionSource, RouteStoreTime.class       );
 			TableUtils.createTable(connectionSource, AssistControl.class        );
+			TableUtils.createTable(connectionSource, ImageTemp.class            );
 
 
             Log.i(LOG_TAG, "execute method onCreate: Can't create Tables");
@@ -121,6 +124,7 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
             TableUtils.dropTable(connectionSource, Media.class,true         );
             TableUtils.dropTable(connectionSource, RouteStoreTime.class,true);
             TableUtils.dropTable(connectionSource, AssistControl.class,true );
+            TableUtils.dropTable(connectionSource, ImageTemp.class,true     );
             onCreate(db,connectionSource);
 
             Log.i(LOG_TAG, "execute method onUpgrade: drop Tables");
@@ -273,6 +277,17 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
             }
         }
         return AssistControlDao;
+    }
+
+    public Dao<ImageTemp, Integer> getImageTempDao() {
+        if (null == ImageTempDao) {
+            try {
+                ImageTempDao = getDao(ImageTemp.class);
+            }catch (java.sql.SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        return ImageTempDao;
     }
 
 

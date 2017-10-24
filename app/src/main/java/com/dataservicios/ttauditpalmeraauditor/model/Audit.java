@@ -12,7 +12,7 @@ public class Audit {
     @DatabaseField
     private int         company_audit_id;
     @DatabaseField
-    private String fullname;
+    private String      fullname;
     @DatabaseField
     private int         orden;
     @DatabaseField
@@ -20,9 +20,9 @@ public class Audit {
     @DatabaseField
     private int         company_id;
     @DatabaseField
-    private String created_at;
+    private String      created_at;
     @DatabaseField
-    private String updated_at;
+    private String      updated_at;
 
 
     public int getId() {

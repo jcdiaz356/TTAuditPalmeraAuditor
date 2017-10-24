@@ -159,8 +159,11 @@ public class MapsRouteActivity extends AppCompatActivity implements OnMapReadyCa
                     markerOption.position(latLong);
                     markerOption.title(s.getFullname());
 
-                    if (bmp == null) markerOption.icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_marker_point)) ; else markerOption.icon(BitmapDescriptorFactory.fromBitmap(bmp));
-                    myMarkerPoints.add(mMap.addMarker(markerOption));
+                    if(s.getStatus()==0){
+                        if (bmp == null) markerOption.icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_marker_point)) ; else markerOption.icon(BitmapDescriptorFactory.fromBitmap(bmp));
+                        myMarkerPoints.add(mMap.addMarker(markerOption));
+                    }
+
                 }
                 myMarkerPoints.get(0).showInfoWindow();
                 CameraPosition cameraPosition = new CameraPosition.Builder().target(new LatLng(latInit,lonInit)).zoom(15).build();

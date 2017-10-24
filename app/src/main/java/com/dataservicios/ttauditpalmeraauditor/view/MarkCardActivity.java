@@ -2,15 +2,28 @@ package com.dataservicios.ttauditpalmeraauditor.view;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
+import android.os.Build;
+import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.dataservicios.ttauditpalmeraauditor.R;
 import com.dataservicios.ttauditpalmeraauditor.db.DatabaseManager;
 import com.dataservicios.ttauditpalmeraauditor.model.AssistControl;
 import com.dataservicios.ttauditpalmeraauditor.model.AuditRoadStore;
+import com.dataservicios.ttauditpalmeraauditor.model.Company;
+import com.dataservicios.ttauditpalmeraauditor.model.ImageTemp;
 import com.dataservicios.ttauditpalmeraauditor.model.Poll;
 import com.dataservicios.ttauditpalmeraauditor.model.PollDetail;
 import com.dataservicios.ttauditpalmeraauditor.model.PollOption;
@@ -20,31 +33,53 @@ import com.dataservicios.ttauditpalmeraauditor.model.User;
 import com.dataservicios.ttauditpalmeraauditor.repo.AssistControlRepo;
 import com.dataservicios.ttauditpalmeraauditor.repo.AuditRoadStoreRepo;
 import com.dataservicios.ttauditpalmeraauditor.repo.CompanyRepo;
+import com.dataservicios.ttauditpalmeraauditor.repo.ImageTempRepo;
 import com.dataservicios.ttauditpalmeraauditor.repo.PollOptionRepo;
 import com.dataservicios.ttauditpalmeraauditor.repo.PollRepo;
 import com.dataservicios.ttauditpalmeraauditor.repo.RouteRepo;
 import com.dataservicios.ttauditpalmeraauditor.repo.StoreRepo;
 import com.dataservicios.ttauditpalmeraauditor.repo.UserRepo;
+import com.dataservicios.ttauditpalmeraauditor.util.BitmapLoader;
 import com.dataservicios.ttauditpalmeraauditor.util.GPSTracker;
+import com.dataservicios.ttauditpalmeraauditor.util.GlobalConstant;
 import com.dataservicios.ttauditpalmeraauditor.util.SessionManager;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.squareup.picasso.Picasso;
 
+import java.io.File;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
+
+import de.hdodenhof.circleimageview.CircleImageView;
+
+import static com.dataservicios.ttauditpalmeraauditor.R.id.imgPhoto;
 
 public class MarkCardActivity extends AppCompatActivity implements OnMapReadyCallback {
     private static final String     LOG_TAG = MarkCardActivity.class.getSimpleName();
+    private static final int        TAKE_PICTURE = 1;
+    private String                  mCurrentPhotoPath, currentDate,currentTime;
     private SessionManager          session;
     private GoogleMap               mMapInPut,mMapOutPut;
     private Activity                activity =  this;
+    private TextView                etFullName;
+    private ImageButton             btPhotoInPut, btPhotoOutPut;
+    private CircleImageView         imcUser;
+    private ImageView               imgInPut, imgOutPut ;
+    private Button                  btOutPut,btInPut;
     private int                     user_id;
-    private int                     company_id;
     private User                    user;
+    private Company                 company;
     private AssistControl           assistControl;
+    private ImageTemp               imageTemp;
     private UserRepo                userRepo ;
+    private CompanyRepo             companyRepo;
     private AssistControlRepo       assistControlRepo;
+    private ImageTempRepo           imageTempRepo;
     private GPSTracker              gpsTracker;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -57,22 +92,70 @@ public class MarkCardActivity extends AppCompatActivity implements OnMapReadyCal
             gpsTracker.showSettingsAlert();
         }
 
+        etFullName      = (TextView) findViewById(R.id.etFullName);
+        btPhotoInPut    = (ImageButton) findViewById(R.id.btPhotoInPut);
+        btPhotoOutPut   = (ImageButton) findViewById(R.id.btPhotoOutPut);
+        btInPut         = (Button) findViewById(R.id.btInPut) ;
+        btOutPut        = (Button) findViewById(R.id.btOutPut) ;
+        imcUser         = (de.hdodenhof.circleimageview.CircleImageView) findViewById(R.id.imcUser);
 
         session = new SessionManager(activity);
         HashMap<String, String> userSesion = session.getUserDetails();
         user_id = Integer.valueOf(userSesion.get(SessionManager.KEY_ID_USER)) ;
 
-        userRepo           = new UserRepo(activity);
-        assistControlRepo  = new AssistControlRepo(activity);
+        userRepo            = new UserRepo(activity);
+        companyRepo         = new CompanyRepo(activity);
+        assistControlRepo   = new AssistControlRepo(activity);
+        imageTempRepo       = new ImageTempRepo(activity);
+
+        user                = (User) userRepo.findById(user_id);
+        company             = (Company) companyRepo.findFirstReg();
+
+        String time_close   = new SimpleDateFormat("yyyy:MM:dd HH:mm:ss").format(new Date());
+
+        etFullName.setText(user.getFullname().toString());
+
+        Picasso.with(activity)
+               .load(GlobalConstant.URL_USER_IMAGES + user.getImage().toString())
+               .error(R.drawable.avataruser)
+               .into(imcUser);
 
         SupportMapFragment mapFragmentOutPut = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.mapOutPut);
         mapFragmentOutPut.getMapAsync(this);
 
-        SupportMapFragment mapFragmentInPut = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.mapInput);
+        SupportMapFragment mapFragmentInPut = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.mapInPut);
         mapFragmentInPut.getMapAsync(this);
 
-    }
+        btPhotoInPut.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                // create intent with ACTION_IMAGE_CAPTURE action
+                Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                //Bundle bundle = getIntent().getExtras();
+                //String idPDV = bundle.getString("idPDV");
+                // Create an image file name
+                String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+                String imageFileName = String.format("%06d", Integer.parseInt(String.valueOf(user.getId()))) + "_" + company.getId() + GlobalConstant.JPEG_FILE_PREFIX + timeStamp;
 
+                File albumF = BitmapLoader.getAlbumDir(activity); // getAlbumDir();
+                // to save picture remove comment
+                File file = new File(albumF,imageFileName+GlobalConstant.JPEG_FILE_SUFFIX);
+
+                Uri photoPath = Uri.fromFile(file);
+                mCurrentPhotoPath = BitmapLoader.getAlbumDir(activity).getAbsolutePath();
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                    Uri contentUri = FileProvider.getUriForFile(activity, "com.dataservicios.ttauditpalmeraauditor.fileProvider", file);
+                    //intent.setDataAndType(contentUri, type);
+                    intent.putExtra(MediaStore.EXTRA_OUTPUT, contentUri);
+                } else {
+                    intent.putExtra(MediaStore.EXTRA_OUTPUT, photoPath);
+                }
+                startActivityForResult(intent, TAKE_PICTURE);
+            }
+        });
+    }
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
@@ -90,14 +173,84 @@ public class MarkCardActivity extends AppCompatActivity implements OnMapReadyCal
             return;
         }
         mMapInPut.setMyLocationEnabled(true);
-        mMapInPut.getUiSettings().setZoomControlsEnabled(true);
+       // mMapInPut.getUiSettings().setZoomControlsEnabled(true);
         mMapInPut.getUiSettings().setCompassEnabled(true);
         mMapInPut.getCameraPosition();
 
         mMapOutPut.setMyLocationEnabled(true);
-        mMapOutPut.getUiSettings().setZoomControlsEnabled(true);
+        //mMapOutPut.getUiSettings().setZoomControlsEnabled(true);
         mMapOutPut.getUiSettings().setCompassEnabled(true);
         mMapOutPut.getCameraPosition();
         //new StoreAuditActivity.loadMarkerPointMap().execute();
     }
+
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode) {
+            case TAKE_PICTURE: {
+                if (resultCode == RESULT_OK) {
+                    handleBigCameraPhoto();
+                }
+                break;
+            }
+        }
+    }
+
+    private void handleBigCameraPhoto() {
+
+        if (mCurrentPhotoPath != null) {
+            galleryAddPic();
+            mCurrentPhotoPath = null;
+            Bundle bundle = getIntent().getExtras();
+            Intent i = new Intent( MarkCardActivity.this , MarkCardActivity.class);
+            startActivity(i);
+            finish();
+        }
+    }
+
+    private void galleryAddPic() {
+        Intent mediaScanIntent = new Intent("android.intent.action.MEDIA_SCANNER_SCAN_FILE");
+        File f = new File(mCurrentPhotoPath);
+        Uri contentUri = Uri.fromFile(f);
+        mediaScanIntent.setData(contentUri);
+        this.sendBroadcast(mediaScanIntent);
+
+    }
+
+    public void getFromSdcard()
+    {
+
+//
+//        File file= new File(BitmapLoader.getAlbumDir(activity).getAbsolutePath());
+//
+//
+//        if (file.isDirectory())
+//        {
+//            listFile = file.listFiles();
+//            if (listFile != null){
+//                for (int i = 0; i < listFile.length; i++)
+//                {
+//                    if (  listFile[i].getName().substring(0,6).equals(String.format("%06d", Integer.parseInt(store_id.toString())) ))
+//                    {
+//                        // f.add(listFile[i].getAbsolutePath());
+//                        if(listFile[i].exists()){
+//                            BitmapFactory.Options options = new BitmapFactory.Options();
+//                            options.inSampleSize = 8;
+//                            Bitmap myBitmap = BitmapFactory.decodeFile(listFile[i].getAbsolutePath(), options);
+//
+//                            //thumbnail.setImageBitmap(myBitmap);
+//                            thumbnail.setImageBitmap(BitmapLoader.rotateImage(myBitmap,90));
+//
+//                            thumbnail.setTag(listFile[i].getName().toString());
+//                        }
+//                    }
+//
+//                }
+//            }
+//
+//
+//        }
+    }
+
 }

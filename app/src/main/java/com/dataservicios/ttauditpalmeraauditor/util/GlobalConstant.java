@@ -5,6 +5,7 @@ package com.dataservicios.ttauditpalmeraauditor.util;
 public final class GlobalConstant {
 
     public static String dominio = "http://ttaudit.com";
+    public static final String URL_USER_IMAGES = dominio + "/media/users/";
     public static String directory_images = "/Pictures/" ;
     public static final String JPEG_FILE_PREFIX = "_palm_sum_";
     public static final String JPEG_FILE_SUFFIX = ".jpg";

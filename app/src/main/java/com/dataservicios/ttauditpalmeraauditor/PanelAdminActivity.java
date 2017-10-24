@@ -43,6 +43,7 @@ import com.dataservicios.ttauditpalmeraauditor.repo.PollRepo;
 import com.dataservicios.ttauditpalmeraauditor.repo.UserRepo;
 import com.dataservicios.ttauditpalmeraauditor.util.BitmapLoader;
 import com.dataservicios.ttauditpalmeraauditor.util.GPSTracker;
+import com.dataservicios.ttauditpalmeraauditor.util.GlobalConstant;
 import com.dataservicios.ttauditpalmeraauditor.util.SessionManager;
 import com.dataservicios.ttauditpalmeraauditor.util.SyncData;
 import com.dataservicios.ttauditpalmeraauditor.view.MarkCardActivity;
@@ -54,23 +55,25 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import de.hdodenhof.circleimageview.CircleImageView;
+
 public class PanelAdminActivity extends AppCompatActivity {
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
 
-    private Activity activity;
+    private Activity                    activity;
     private SessionManager              session;
-    private DrawerLayout mDrawerLayout;
-    private CharSequence mTitle;
-    private ListView mDrawerList;
-    private ActionBarDrawerToggle mDrawerToggle;
-    private CharSequence mDrawerTitle;
+    private DrawerLayout                mDrawerLayout;
+    private CharSequence                mTitle;
+    private ListView                    mDrawerList;
+    private ActionBarDrawerToggle       mDrawerToggle;
+    private CharSequence                mDrawerTitle;
     private String[]                    navMenuTitles;
-    private TypedArray navMenuIcons;
-    private ArrayList<NavDrawerItem> navDrawerItems;
+    private TypedArray                  navMenuIcons;
+    private ArrayList<NavDrawerItem>    navDrawerItems;
     private NavDrawerListAdapter        adapter;
-    private TextView tvUser;
-    private TextView tvCampaign;
-    private ImageView imgPhoto;
+    private TextView                    tvUser;
+    private TextView                    tvCampaign;
+    private CircleImageView             imcPhoto;
     private int                         user_id;
     private int                         company_id;
     private UserRepo                    userRepo;
@@ -79,8 +82,8 @@ public class PanelAdminActivity extends AppCompatActivity {
     private PollOptionRepo              pollOptionRepo;
     private AuditRepo                   auditRepo;
     private User                        user;
-    private Fragment fragment;
-    private File filePath;
+    private Fragment                    fragment;
+    private File                        filePath;
 
 
     @Override
@@ -89,9 +92,10 @@ public class PanelAdminActivity extends AppCompatActivity {
         setContentView(R.layout.activity_panel_admin);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
 
-        tvUser = (TextView) findViewById(R.id.tvUser);
-        tvCampaign = (TextView) findViewById(R.id.tvCampaign);
-        imgPhoto = (ImageView) findViewById(R.id.imgPhoto);
+        tvUser      = (TextView) findViewById(R.id.tvUser);
+        tvCampaign  = (TextView) findViewById(R.id.tvCampaign);
+        //imcPhoto  = (ImageView) findViewById(R.id.imcPhoto);
+        imcPhoto    = (de.hdodenhof.circleimageview.CircleImageView) findViewById(R.id.imcPhoto);
 
         setSupportActionBar(toolbar);
         activity = (Activity) this;
@@ -125,9 +129,9 @@ public class PanelAdminActivity extends AppCompatActivity {
         tvCampaign.setText(company.getFullname());
 
         Picasso.with(activity)
-                .load(user.getImage())
+                .load(GlobalConstant.URL_USER_IMAGES + user.getImage())
                 .error(R.drawable.avataruser)
-                .into(imgPhoto);
+                .into(imcPhoto);
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {

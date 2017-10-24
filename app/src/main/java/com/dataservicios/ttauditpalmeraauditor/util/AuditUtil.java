@@ -361,7 +361,7 @@ public class AuditUtil {
                     user.setId(json.getInt("id"));
                     user.setEmail(userName);
                     user.setFullname(json.getString("fullname"));
-                    user.setImage("use");
+                    if(json.isNull("image")) user.setImage("null");  else user.setImage(json.getString("image"));
                     user.setPassword(password);
                 }else{
                     Log.d(LOG_TAG, "No se pudo iniciar sesión");

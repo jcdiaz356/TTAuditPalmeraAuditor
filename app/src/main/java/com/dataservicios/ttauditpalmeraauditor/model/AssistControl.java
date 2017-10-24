@@ -9,7 +9,7 @@ import com.j256.ormlite.field.DatabaseField;
 public class AssistControl {
     @DatabaseField(id = true)
     private int     id;
-    @DatabaseField(id = true)
+    @DatabaseField
     private int     user_id;
     @DatabaseField
     private int     company_id;
